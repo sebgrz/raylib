@@ -44,23 +44,27 @@
 *     3. This notice may not be removed or altered from any source distribution.
 *
 **********************************************************************************************/
-
+#if !defined(ONLY_CPU_MODE)
 #define GLFW_INCLUDE_NONE       // Disable the standard OpenGL header inclusion on GLFW3
                                 // NOTE: Already provided by rlgl implementation (on glad.h)
 #include "GLFW/glfw3.h"         // GLFW3: Windows, OpenGL context and Input management
 
 #include <emscripten/emscripten.h>      // Emscripten functionality for C
 #include <emscripten/html5.h>           // Emscripten HTML5 library
+#endif
 
 #include <sys/time.h>   // Required for: timespec, nanosleep(), select() - POSIX
 
 //----------------------------------------------------------------------------------
 // Defines and Macros
 //----------------------------------------------------------------------------------
+
+#if !defined(ONLY_CPU_MODE)
 // TODO: HACK: Added flag if not provided by GLFW when using external library
 // Latest GLFW release (GLFW 3.3.8) does not implement this flag, it was added for 3.4.0-dev
 #if !defined(GLFW_MOUSE_PASSTHROUGH)
     #define GLFW_MOUSE_PASSTHROUGH      0x0002000D
+#endif
 #endif
 
 #if (_POSIX_C_SOURCE < 199309L)
@@ -71,6 +75,7 @@
 //----------------------------------------------------------------------------------
 // Types and Structures Definition
 //----------------------------------------------------------------------------------
+#if !defined(ONLY_CPU_MODE)
 typedef struct {
     GLFWwindow *handle;                 // GLFW window handle (graphic device)
     bool ourFullscreen;                 // Internal var to filter our handling of fullscreen vs the user handling of fullscreen
@@ -78,12 +83,13 @@ typedef struct {
     int unmaximizedHeight;              // Internal var to store the unmaximized window (canvas) height
 } PlatformData;
 
+static PlatformData platform = { 0 };   // Platform specific data
+#endif
 //----------------------------------------------------------------------------------
 // Global Variables Definition
 //----------------------------------------------------------------------------------
 extern CoreData CORE;                   // Global CORE state context
 
-static PlatformData platform = { 0 };   // Platform specific data
 
 //----------------------------------------------------------------------------------
 // Local Variables Definition
@@ -107,6 +113,8 @@ Vector2 lockedMousePos = { 0 };
 //----------------------------------------------------------------------------------
 // Module Internal Functions Declaration
 //----------------------------------------------------------------------------------
+
+#if !defined(ONLY_CPU_MODE)
 int InitPlatform(void);          // Initialize platform (graphics, inputs and more)
 void ClosePlatform(void);        // Close platform
 
@@ -856,6 +864,8 @@ void SwapScreenBuffer(void)
     glfwSwapBuffers(platform.handle);
 }
 
+#endif
+
 //----------------------------------------------------------------------------------
 // Module Functions Definition: Misc
 //----------------------------------------------------------------------------------
@@ -863,7 +873,16 @@ void SwapScreenBuffer(void)
 // Get elapsed time measure in seconds since InitTimer()
 double GetTime(void)
 {
+#if !defined(ONLY_CPU_MODE)
     double time = glfwGetTime();   // Elapsed time since glfwInit()
+#else
+    double time = 0.0;
+    struct timespec ts = { 0 };
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    unsigned long long int nanoSeconds = (unsigned long long int)ts.tv_sec*1000000000LLU + (unsigned long long int)ts.tv_nsec;
+
+    time = (double)(nanoSeconds - CORE.Time.base)*1e-9;  // Elapsed time since InitTimer()
+#endif
     return time;
 }
 
@@ -874,9 +893,11 @@ double GetTime(void)
 // Ref: https://github.com/raysan5/raylib/issues/686
 void OpenURL(const char *url)
 {
+#if !defined(ONLY_CPU_MODE)
     // Security check to (partially) avoid malicious code on target platform
     if (strchr(url, '\'') != NULL) TRACELOG(LOG_WARNING, "SYSTEM: Provided URL could be potentially malicious, avoid [\'] character");
     else emscripten_run_script(TextFormat("window.open('%s', '_blank')", url));
+#endif
 }
 
 //----------------------------------------------------------------------------------
@@ -894,6 +915,7 @@ int SetGamepadMappings(const char *mappings)
 // Set gamepad vibration
 void SetGamepadVibration(int gamepad, float leftMotor, float rightMotor, float duration)
 {
+#if !defined(ONLY_CPU_MODE)
     if ((gamepad < MAX_GAMEPADS) && CORE.Input.Gamepad.ready[gamepad] && (duration > 0.0f))
     {
         if (leftMotor < 0.0f) leftMotor = 0.0f;
@@ -920,6 +942,7 @@ void SetGamepadVibration(int gamepad, float leftMotor, float rightMotor, float d
             }
         }, gamepad, leftMotor, rightMotor, duration);
     }
+#endif
 }
 
 // Set mouse position XY
@@ -930,19 +953,23 @@ void SetMousePosition(int x, int y)
 
     if (CORE.Input.Mouse.cursorHidden) lockedMousePos = CORE.Input.Mouse.currentPosition;
 
+#if !defined(ONLY_CPU_MODE)
     // NOTE: emscripten not implemented
     glfwSetCursorPos(platform.handle, CORE.Input.Mouse.currentPosition.x, CORE.Input.Mouse.currentPosition.y);
+#endif
 }
 
 // Set mouse cursor
 void SetMouseCursor(int cursor)
 {
+#if !defined(ONLY_CPU_MODE)
     if (CORE.Input.Mouse.cursor != cursor)
     {
         if (!CORE.Input.Mouse.cursorHidden) EM_ASM( { document.getElementById('canvas').style.cursor = UTF8ToString($0); }, cursorLUT[cursor]);
 
         CORE.Input.Mouse.cursor = cursor;
     }
+#endif
 }
 
 // Get physical key name.
@@ -955,6 +982,7 @@ const char *GetKeyName(int key)
 // Register all input events
 void PollInputEvents(void)
 {
+#if !defined(ONLY_CPU_MODE)
 #if defined(SUPPORT_GESTURES_SYSTEM)
     // NOTE: Gestures update must be called every frame to reset gestures correctly
     // because ProcessGestureEvent() is just called on an event, not every frame
@@ -1069,12 +1097,14 @@ void PollInputEvents(void)
     // TODO: This code does not seem to do anything??
     //if (CORE.Window.eventWaiting) glfwWaitEvents();     // Wait for in input events before continue (drawing is paused)
     //else glfwPollEvents(); // Poll input events: keyboard/mouse/window events (callbacks) --> WARNING: Where is key input reset?
+#endif
 }
 
 //----------------------------------------------------------------------------------
 // Module Internal Functions Definition
 //----------------------------------------------------------------------------------
 
+#if !defined(ONLY_CPU_MODE)
 // Initialize platform: graphics, inputs and more
 int InitPlatform(void)
 {
@@ -1785,5 +1815,5 @@ static EM_BOOL EmscriptenTouchCallback(int eventType, const EmscriptenTouchEvent
 
     return 1; // The event was consumed by the callback handler
 }
-
+#endif
 // EOF

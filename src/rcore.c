@@ -110,8 +110,10 @@
 #include <time.h>                   // Required for: time() [Used in InitTimer()]
 #include <math.h>                   // Required for: tan() [Used in BeginMode3D()], atan2f() [Used in LoadVrStereoConfig()]
 
-#define RLGL_IMPLEMENTATION
-#include "rlgl.h"                   // OpenGL abstraction layer to OpenGL 1.1, 3.3+ or ES2
+#if !defined(ONLY_CPU_MODE)
+    #define RLGL_IMPLEMENTATION
+    #include "rlgl.h"                   // OpenGL abstraction layer to OpenGL 1.1, 3.3+ or ES2
+#endif
 
 #define RAYMATH_IMPLEMENTATION
 #include "raymath.h"                // Vector2, Vector3, Quaternion and Matrix functionality
@@ -387,6 +389,35 @@ static bool gifRecording = false;           // GIF recording state
 static MsfGifState gifState = { 0 };        // MSGIF context state
 #endif
 
+// Texture pixel formats
+// NOTE: Support depends on OpenGL version
+typedef enum {
+    RL_PIXELFORMAT_UNCOMPRESSED_GRAYSCALE = 1,     // 8 bit per pixel (no alpha)
+    RL_PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA,        // 8*2 bpp (2 channels)
+    RL_PIXELFORMAT_UNCOMPRESSED_R5G6B5,            // 16 bpp
+    RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8,            // 24 bpp
+    RL_PIXELFORMAT_UNCOMPRESSED_R5G5B5A1,          // 16 bpp (1 bit alpha)
+    RL_PIXELFORMAT_UNCOMPRESSED_R4G4B4A4,          // 16 bpp (4 bit alpha)
+    RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,          // 32 bpp
+    RL_PIXELFORMAT_UNCOMPRESSED_R32,               // 32 bpp (1 channel - float)
+    RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32,         // 32*3 bpp (3 channels - float)
+    RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32A32,      // 32*4 bpp (4 channels - float)
+    RL_PIXELFORMAT_UNCOMPRESSED_R16,               // 16 bpp (1 channel - half float)
+    RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16,         // 16*3 bpp (3 channels - half float)
+    RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16A16,      // 16*4 bpp (4 channels - half float)
+    RL_PIXELFORMAT_COMPRESSED_DXT1_RGB,            // 4 bpp (no alpha)
+    RL_PIXELFORMAT_COMPRESSED_DXT1_RGBA,           // 4 bpp (1 bit alpha)
+    RL_PIXELFORMAT_COMPRESSED_DXT3_RGBA,           // 8 bpp
+    RL_PIXELFORMAT_COMPRESSED_DXT5_RGBA,           // 8 bpp
+    RL_PIXELFORMAT_COMPRESSED_ETC1_RGB,            // 4 bpp
+    RL_PIXELFORMAT_COMPRESSED_ETC2_RGB,            // 4 bpp
+    RL_PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA,       // 8 bpp
+    RL_PIXELFORMAT_COMPRESSED_PVRT_RGB,            // 4 bpp
+    RL_PIXELFORMAT_COMPRESSED_PVRT_RGBA,           // 4 bpp
+    RL_PIXELFORMAT_COMPRESSED_ASTC_4x4_RGBA,       // 8 bpp
+    RL_PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA        // 2 bpp
+} rlPixelFormat;
+
 #if defined(SUPPORT_AUTOMATION_EVENTS)
 // Automation events type
 typedef enum AutomationEventType {
@@ -519,17 +550,17 @@ const char *TextFormat(const char *text, ...);              // Formatting of tex
 #endif // SUPPORT_CLIPBOARD_IMAGE
 
 // Include platform-specific submodules
-#if defined(PLATFORM_DESKTOP_GLFW)
+#if defined(PLATFORM_DESKTOP_GLFW) && !defined(ONLY_CPU_MODE)
     #include "platforms/rcore_desktop_glfw.c"
-#elif defined(PLATFORM_DESKTOP_SDL)
+#elif defined(PLATFORM_DESKTOP_SDL) && !defined(ONLY_CPU_MODE)
     #include "platforms/rcore_desktop_sdl.c"
-#elif defined(PLATFORM_DESKTOP_RGFW)
+#elif defined(PLATFORM_DESKTOP_RGFW) && !defined(ONLY_CPU_MODE)
     #include "platforms/rcore_desktop_rgfw.c"
 #elif defined(PLATFORM_WEB)
     #include "platforms/rcore_web.c"
-#elif defined(PLATFORM_DRM)
+#elif defined(PLATFORM_DRM) && !defined(ONLY_CPU_MODE)
     #include "platforms/rcore_drm.c"
-#elif defined(PLATFORM_ANDROID)
+#elif defined(PLATFORM_ANDROID) && !defined(ONLY_CPU_MODE)
     #include "platforms/rcore_android.c"
 #else
     // TODO: Include your custom platform backend!
@@ -582,6 +613,8 @@ const char *TextFormat(const char *text, ...);              // Formatting of tex
 //void HideCursor(void)
 //void EnableCursor(void)
 //void DisableCursor(void)
+
+#if !defined(ONLY_CPU_MODE)
 
 // Initialize window and OpenGL context
 void InitWindow(int width, int height, const char *title)
@@ -1617,6 +1650,8 @@ Vector2 GetScreenToWorld2D(Vector2 position, Camera2D camera)
     return (Vector2){ transform.x, transform.y };
 }
 
+#endif // ONLY_CPU_MODE
+
 //----------------------------------------------------------------------------------
 // Module Functions Definition: Timming
 //----------------------------------------------------------------------------------
@@ -1835,7 +1870,7 @@ void UnloadRandomSequence(int *sequence)
 // NOTE: Provided fileName should not contain paths, saving to working directory
 void TakeScreenshot(const char *fileName)
 {
-#if defined(SUPPORT_MODULE_RTEXTURES)
+#if defined(SUPPORT_MODULE_RTEXTURES) && !defined(ONLY_CPU_MODE)
     // Security check to (partially) avoid malicious code
     if (strchr(fileName, '\'') != NULL) { TRACELOG(LOG_WARNING, "SYSTEM: Provided fileName could be potentially malicious, avoid [\'] character"); return; }
 
@@ -3522,6 +3557,7 @@ void SetupViewport(int width, int height)
     CORE.Window.render.width = width;
     CORE.Window.render.height = height;
 
+#if !defined(ONLY_CPU_MODE)
     // Set viewport width and height
     // NOTE: We consider render size (scaled) and offset in case black bars are required and
     // render area does not match full display area (this situation is only applicable on fullscreen mode)
@@ -3541,6 +3577,7 @@ void SetupViewport(int width, int height)
 
     rlMatrixMode(RL_MODELVIEW);         // Switch back to modelview matrix
     rlLoadIdentity();                   // Reset current matrix (modelview)
+#endif
 }
 
 // Compute framebuffer size relative to screen size and display size
@@ -4051,3 +4088,36 @@ const char *TextFormat(const char *text, ...)
 }
 
 #endif // !SUPPORT_MODULE_RTEXT
+
+// Get name string for pixel format
+const char *rlGetPixelFormatName(unsigned int format)
+{
+    switch (format)
+    {
+        case RL_PIXELFORMAT_UNCOMPRESSED_GRAYSCALE: return "GRAYSCALE"; break;         // 8 bit per pixel (no alpha)
+        case RL_PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA: return "GRAY_ALPHA"; break;       // 8*2 bpp (2 channels)
+        case RL_PIXELFORMAT_UNCOMPRESSED_R5G6B5: return "R5G6B5"; break;               // 16 bpp
+        case RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8: return "R8G8B8"; break;               // 24 bpp
+        case RL_PIXELFORMAT_UNCOMPRESSED_R5G5B5A1: return "R5G5B5A1"; break;           // 16 bpp (1 bit alpha)
+        case RL_PIXELFORMAT_UNCOMPRESSED_R4G4B4A4: return "R4G4B4A4"; break;           // 16 bpp (4 bit alpha)
+        case RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8A8: return "R8G8B8A8"; break;           // 32 bpp
+        case RL_PIXELFORMAT_UNCOMPRESSED_R32: return "R32"; break;                     // 32 bpp (1 channel - float)
+        case RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32: return "R32G32B32"; break;         // 32*3 bpp (3 channels - float)
+        case RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32A32: return "R32G32B32A32"; break;   // 32*4 bpp (4 channels - float)
+        case RL_PIXELFORMAT_UNCOMPRESSED_R16: return "R16"; break;                     // 16 bpp (1 channel - half float)
+        case RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16: return "R16G16B16"; break;         // 16*3 bpp (3 channels - half float)
+        case RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16A16: return "R16G16B16A16"; break;   // 16*4 bpp (4 channels - half float)
+        case RL_PIXELFORMAT_COMPRESSED_DXT1_RGB: return "DXT1_RGB"; break;             // 4 bpp (no alpha)
+        case RL_PIXELFORMAT_COMPRESSED_DXT1_RGBA: return "DXT1_RGBA"; break;           // 4 bpp (1 bit alpha)
+        case RL_PIXELFORMAT_COMPRESSED_DXT3_RGBA: return "DXT3_RGBA"; break;           // 8 bpp
+        case RL_PIXELFORMAT_COMPRESSED_DXT5_RGBA: return "DXT5_RGBA"; break;           // 8 bpp
+        case RL_PIXELFORMAT_COMPRESSED_ETC1_RGB: return "ETC1_RGB"; break;             // 4 bpp
+        case RL_PIXELFORMAT_COMPRESSED_ETC2_RGB: return "ETC2_RGB"; break;             // 4 bpp
+        case RL_PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA: return "ETC2_RGBA"; break;       // 8 bpp
+        case RL_PIXELFORMAT_COMPRESSED_PVRT_RGB: return "PVRT_RGB"; break;             // 4 bpp
+        case RL_PIXELFORMAT_COMPRESSED_PVRT_RGBA: return "PVRT_RGBA"; break;           // 4 bpp
+        case RL_PIXELFORMAT_COMPRESSED_ASTC_4x4_RGBA: return "ASTC_4x4_RGBA"; break;   // 8 bpp
+        case RL_PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA: return "ASTC_8x8_RGBA"; break;   // 2 bpp
+        default: return "UNKNOWN"; break;
+    }
+}

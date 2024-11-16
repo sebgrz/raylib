@@ -91,6 +91,8 @@ static float EaseCubicInOut(float t, float b, float c, float d);    // Cubic eas
 // Module Functions Definition
 //----------------------------------------------------------------------------------
 
+#if !defined(ONLY_CPU_MODE)
+
 // Set texture and rectangle to be used on shapes drawing
 // NOTE: It can be useful when using basic shapes and one single font,
 // defining a font char white rectangle would allow drawing everything in a single draw call
@@ -2174,6 +2176,8 @@ Vector2 GetSplinePointBezierCubic(Vector2 startPos, Vector2 startControlPos, Vec
 
     return point;
 }
+
+#endif // ONLY_CPU_MODE
 
 //----------------------------------------------------------------------------------
 // Module Functions Definition - Collision Detection functions

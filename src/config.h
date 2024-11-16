@@ -35,7 +35,6 @@
 #define SUPPORT_MODULE_RSHAPES          1
 #define SUPPORT_MODULE_RTEXTURES        1
 #define SUPPORT_MODULE_RTEXT            1       // WARNING: It requires SUPPORT_MODULE_RTEXTURES to load sprite font textures
-#define SUPPORT_MODULE_RMODELS          1
 #define SUPPORT_MODULE_RAUDIO           1
 
 //------------------------------------------------------------------------------------
@@ -65,7 +64,10 @@
 // Support CompressData() and DecompressData() functions
 #define SUPPORT_COMPRESSION_API         1
 // Support automatic generated events, loading and recording of those events when required
+#if !defined(ONLY_CPU_MODE)
+#define SUPPORT_MODULE_RMODELS          1
 #define SUPPORT_AUTOMATION_EVENTS       1
+#endif
 // Support custom frame control, only for advanced users
 // By default EndDrawing() does this job: draws everything + SwapScreenBuffer() + manage frame timing + PollInputEvents()
 // Enabling this flag allows manual control of the frame processes, use at your own risk

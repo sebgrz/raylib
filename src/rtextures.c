@@ -558,6 +558,8 @@ Image LoadImageFromTexture(Texture2D texture)
 {
     Image image = { 0 };
 
+#if !defined(ONLY_CPU_MODE)
+
     if (texture.format < PIXELFORMAT_COMPRESSED_DXT1_RGB)
     {
         image.data = rlReadTexturePixels(texture.id, texture.width, texture.height, texture.format);
@@ -580,6 +582,9 @@ Image LoadImageFromTexture(Texture2D texture)
         else TRACELOG(LOG_WARNING, "TEXTURE: [ID %i] Failed to retrieve pixel data", texture.id);
     }
     else TRACELOG(LOG_WARNING, "TEXTURE: [ID %i] Failed to retrieve compressed pixel data", texture.id);
+#else
+    TRACELOG(LOG_FATAL, "LoadImageFromTexture is unsupported in ONLY_CPU_MODE");
+#endif
 
     return image;
 }
@@ -587,15 +592,17 @@ Image LoadImageFromTexture(Texture2D texture)
 // Load image from screen buffer and (screenshot)
 Image LoadImageFromScreen(void)
 {
-    Vector2 scale = GetWindowScaleDPI();
     Image image = { 0 };
+
+#if !defined(ONLY_CPU_MODE)
+    Vector2 scale = GetWindowScaleDPI();
 
     image.width = (int)(GetScreenWidth()*scale.x);
     image.height = (int)(GetScreenHeight()*scale.y);
     image.mipmaps = 1;
     image.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
     image.data = rlReadScreenPixels(image.width, image.height);
-
+#endif
     return image;
 }
 
@@ -4092,6 +4099,8 @@ void ImageDrawTextEx(Image *dst, Font font, const char *text, Vector2 position, 
     UnloadImage(imText);
 }
 
+#if !defined(ONLY_CPU_MODE)
+
 //------------------------------------------------------------------------------------
 // Texture loading functions
 //------------------------------------------------------------------------------------
@@ -4807,6 +4816,8 @@ void DrawTextureNPatch(Texture2D texture, NPatchInfo nPatchInfo, Rectangle dest,
         rlSetTexture(0);
     }
 }
+
+#endif
 
 // Check if two colors are equal
 bool ColorIsEqual(Color col1, Color col2)

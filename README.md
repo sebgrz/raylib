@@ -1,5 +1,20 @@
 <img align="left" style="width:260px" src="https://github.com/raysan5/raylib/blob/master/logo/raylib_logo_animation.gif" width="288px">
 
+**FORK**
+Fork introduce a switch to expose only CPU api. That means all gl/window specific functions should be excluded during compilation process.
+
+The main goal for this project is to use all image manipulations functions without ivolvement opengl api and platform specific apis.
+For MVP the raylib library should compile to the WASM target using only libc emscripten implementation api.
+
+**Compilation:**
+1. Clone https://github.com/emscripten-core/emsdk repository
+2. Download latest emscritpen build https://github.com/emscripten-core/emsdk?tab=readme-ov-file#downloads--how-do-i-get-the-latest-emscripten-build
+3. Run following commands in `raylib/src` directory:
+```
+export CLANG_BIN=~/clang-18/bin # Your path to the clang bin
+make CC=$CLANG_BIN/clang-18 AR=$CLANG_BIN/llvm-ar NM=$CLANG_BIN/llvm-nm PLATFORM=PLATFORM_WEB CUSTOM_CFLAGS="-I<PATH_TO_EMSDK_REPO>/emsdk/upstream/emscripten/cache/sysroot/include -DONLY_CPU_MODE --target=wasm32" RAYLIB_MODULE_AUDIO=FALSE
+```
+
 **raylib is a simple and easy-to-use library to enjoy videogames programming.**
 
 raylib is highly inspired by Borland BGI graphics lib and by XNA framework and it's especially well suited for prototyping, tooling, graphical applications, embedded systems and education.

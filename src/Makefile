@@ -94,6 +94,8 @@ RAYLIB_RES_FILE      ?= ./raylib.dll.rc.data
 # if NONE, default config.h flags are used
 RAYLIB_CONFIG_FLAGS  ?= NONE
 
+ONLY_CPU_MODE ?= NONE
+
 # To define additional cflags: Use make CUSTOM_CFLAGS=""
 
 # Include raylib modules on compilation

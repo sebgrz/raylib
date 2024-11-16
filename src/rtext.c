@@ -253,7 +253,9 @@ extern void LoadFontDefault(void)
         counter++;
     }
 
+#if !defined(ONLY_CPU_MODE)
     if (isGpuReady) defaultFont.texture = LoadTextureFromImage(imFont);
+#endif
 
     // Reconstruct charSet using charsWidth[], charsHeight, charsDivisor, glyphCount
     //------------------------------------------------------------------------------
@@ -309,7 +311,9 @@ extern void LoadFontDefault(void)
 extern void UnloadFontDefault(void)
 {
     for (int i = 0; i < defaultFont.glyphCount; i++) UnloadImage(defaultFont.glyphs[i].image);
+#if !defined(ONLY_CPU_MODE)
     if (isGpuReady) UnloadTexture(defaultFont.texture);
+#endif
     RL_FREE(defaultFont.glyphs);
     RL_FREE(defaultFont.recs);
 }
@@ -363,6 +367,7 @@ Font LoadFont(const char *fileName)
         UnloadImage(image);
     }
 
+#if !defined(ONLY_CPU_MODE)
     if (isGpuReady)
     {
         if (font.texture.id == 0) TRACELOG(LOG_WARNING, "FONT: [%s] Failed to load font texture -> Using default font", fileName);
@@ -372,6 +377,7 @@ Font LoadFont(const char *fileName)
             TRACELOG(LOG_INFO, "FONT: Data loaded successfully (%i pixel size | %i glyphs)", FONT_TTF_DEFAULT_SIZE, FONT_TTF_DEFAULT_NUMCHARS);
         }
     }
+#endif
 
     return font;
 }
@@ -491,7 +497,9 @@ Font LoadFontFromImage(Image image, Color key, int firstChar)
     };
 
     // Set font with all data parsed from image
+#if !defined(ONLY_CPU_MODE)
     if (isGpuReady) font.texture = LoadTextureFromImage(fontClear); // Convert processed image to OpenGL texture
+#endif
     font.glyphCount = index;
     font.glyphPadding = 0;
 
@@ -560,7 +568,9 @@ Font LoadFontFromMemory(const char *fileType, const unsigned char *fileData, int
         font.glyphPadding = FONT_TTF_DEFAULT_CHARS_PADDING;
 
         Image atlas = GenImageFontAtlas(font.glyphs, &font.recs, font.glyphCount, font.baseSize, font.glyphPadding, 0);
+#if !defined(ONLY_CPU_MODE)
         if (isGpuReady) font.texture = LoadTextureFromImage(atlas);
+#endif
 
         // Update glyphs[i].image to use alpha, required to be used on ImageDrawText()
         for (int i = 0; i < font.glyphCount; i++)
@@ -951,7 +961,9 @@ void UnloadFont(Font font)
     if (font.texture.id != GetFontDefault().texture.id)
     {
         UnloadFontData(font.glyphs, font.glyphCount);
+#if !defined(ONLY_CPU_MODE)
         if (isGpuReady) UnloadTexture(font.texture);
+#endif
         RL_FREE(font.recs);
 
         TRACELOGD("FONT: Unloaded font data from RAM and VRAM");
@@ -1112,6 +1124,8 @@ bool ExportFontAsCode(Font font, const char *fileName)
     return success;
 }
 
+#if !defined(ONLY_CPU_MODE)
+
 // Draw current FPS
 // NOTE: Uses default font
 void DrawFPS(int posX, int posY)
@@ -1253,6 +1267,8 @@ void DrawTextCodepoints(Font font, const int *codepoints, int codepointCount, Ve
     }
 }
 
+#endif
+
 // Set vertical line spacing when drawing with line-breaks
 void SetTextLineSpacing(int spacing)
 {
@@ -1282,8 +1298,10 @@ Vector2 MeasureTextEx(Font font, const char *text, float fontSize, float spacing
 {
     Vector2 textSize = { 0 };
 
+#if !defined(ONLY_CPU_MODE)
     if ((isGpuReady && (font.texture.id == 0)) || 
         (text == NULL) || (text[0] == '\0')) return textSize; // Security check
+#endif
 
     int size = TextLength(text);    // Get size in bytes of text
     int tempByteCounter = 0;        // Used to count longer text line num chars
@@ -2264,7 +2282,9 @@ static Font LoadBMFont(const char *fileName)
 
     RL_FREE(imFonts);
 
+#if !defined(ONLY_CPU_MODE)
     if (isGpuReady) font.texture = LoadTextureFromImage(fullFont);
+#endif
 
     // Fill font characters info data
     font.baseSize = fontSize;
@@ -2306,6 +2326,7 @@ static Font LoadBMFont(const char *fileName)
     UnloadImage(fullFont);
     UnloadFileText(fileText);
 
+#if !defined(ONLY_CPU_MODE)
     if (isGpuReady && (font.texture.id == 0))
     {
         UnloadFont(font);
@@ -2313,6 +2334,7 @@ static Font LoadBMFont(const char *fileName)
         TRACELOG(LOG_WARNING, "FONT: [%s] Failed to load texture, reverted to default font", fileName);
     }
     else TRACELOG(LOG_INFO, "FONT: [%s] Font loaded successfully (%i glyphs)", fileName, font.glyphCount);
+#endif
 
     return font;
 }

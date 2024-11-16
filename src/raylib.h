@@ -964,6 +964,8 @@ typedef bool (*SaveFileTextCallback)(const char *fileName, char *text); // FileI
 extern "C" {            // Prevents name mangling of functions
 #endif
 
+#if !defined(ONLY_CPU_MODE)
+
 // Window-related functions
 RLAPI void InitWindow(int width, int height, const char *title);  // Initialize window and OpenGL context
 RLAPI void CloseWindow(void);                                     // Close window and unload OpenGL context
@@ -1069,6 +1071,8 @@ RLAPI Vector2 GetWorldToScreen2D(Vector2 position, Camera2D camera);    // Get t
 RLAPI Vector2 GetScreenToWorld2D(Vector2 position, Camera2D camera);    // Get the world space position for a 2d camera screen space position
 RLAPI Matrix GetCameraMatrix(Camera camera);                            // Get camera transform matrix (view matrix)
 RLAPI Matrix GetCameraMatrix2D(Camera2D camera);                        // Get camera 2d transform matrix
+
+#endif // ONLY_CPU_MODE
 
 // Timing-related functions
 RLAPI void SetTargetFPS(int fps);                                 // Set target FPS (maximum)
@@ -1233,6 +1237,7 @@ RLAPI float GetGesturePinchAngle(void);                 // Get gesture pinch ang
 RLAPI void UpdateCamera(Camera *camera, int mode);      // Update camera position for selected mode
 RLAPI void UpdateCameraPro(Camera *camera, Vector3 movement, Vector3 rotation, float zoom); // Update camera movement/rotation
 
+#if !defined(ONLY_CPU_MODE)
 //------------------------------------------------------------------------------------
 // Basic Shapes Drawing Functions (Module: shapes)
 //------------------------------------------------------------------------------------
@@ -1301,6 +1306,8 @@ RLAPI Vector2 GetSplinePointCatmullRom(Vector2 p1, Vector2 p2, Vector2 p3, Vecto
 RLAPI Vector2 GetSplinePointBezierQuad(Vector2 p1, Vector2 c2, Vector2 p3, float t);                     // Get (evaluate) spline point: Quadratic Bezier
 RLAPI Vector2 GetSplinePointBezierCubic(Vector2 p1, Vector2 c2, Vector2 c3, Vector2 p4, float t);        // Get (evaluate) spline point: Cubic Bezier
 
+#endif // ONLY_CPU_MODE
+
 // Basic shapes collision detection functions
 RLAPI bool CheckCollisionRecs(Rectangle rec1, Rectangle rec2);                                           // Check collision between two rectangles
 RLAPI bool CheckCollisionCircles(Vector2 center1, float radius1, Vector2 center2, float radius2);        // Check collision between two circles
@@ -1313,6 +1320,7 @@ RLAPI bool CheckCollisionPointLine(Vector2 point, Vector2 p1, Vector2 p2, int th
 RLAPI bool CheckCollisionPointPoly(Vector2 point, const Vector2 *points, int pointCount);                // Check if point is within a polygon described by array of vertices
 RLAPI bool CheckCollisionLines(Vector2 startPos1, Vector2 endPos1, Vector2 startPos2, Vector2 endPos2, Vector2 *collisionPoint); // Check the collision between two lines defined by two points each, returns collision point by reference
 RLAPI Rectangle GetCollisionRec(Rectangle rec1, Rectangle rec2);                                         // Get collision rectangle for two rectangles collision
+
 
 //------------------------------------------------------------------------------------
 // Texture Loading and Drawing Functions (Module: textures)
@@ -1407,6 +1415,7 @@ RLAPI void ImageDraw(Image *dst, Image src, Rectangle srcRec, Rectangle dstRec, 
 RLAPI void ImageDrawText(Image *dst, const char *text, int posX, int posY, int fontSize, Color color);   // Draw text (using default font) within an image (destination)
 RLAPI void ImageDrawTextEx(Image *dst, Font font, const char *text, Vector2 position, float fontSize, float spacing, Color tint); // Draw text (custom sprite font) within an image (destination)
 
+#if !defined(ONLY_CPU_MODE)
 // Texture loading functions
 // NOTE: These functions require GPU access
 RLAPI Texture2D LoadTexture(const char *fileName);                                                       // Load texture from file into GPU memory (VRAM)
@@ -1432,6 +1441,8 @@ RLAPI void DrawTextureEx(Texture2D texture, Vector2 position, float rotation, fl
 RLAPI void DrawTextureRec(Texture2D texture, Rectangle source, Vector2 position, Color tint);            // Draw a part of a texture defined by a rectangle
 RLAPI void DrawTexturePro(Texture2D texture, Rectangle source, Rectangle dest, Vector2 origin, float rotation, Color tint); // Draw a part of a texture defined by a rectangle with 'pro' parameters
 RLAPI void DrawTextureNPatch(Texture2D texture, NPatchInfo nPatchInfo, Rectangle dest, Vector2 origin, float rotation, Color tint); // Draws a texture (or part of it) that stretches or shrinks nicely
+
+#endif
 
 // Color/pixel related functions
 RLAPI bool ColorIsEqual(Color col1, Color col2);                            // Check if two colors are equal
@@ -1469,6 +1480,7 @@ RLAPI void UnloadFontData(GlyphInfo *glyphs, int glyphCount);                   
 RLAPI void UnloadFont(Font font);                                                           // Unload font from GPU memory (VRAM)
 RLAPI bool ExportFontAsCode(Font font, const char *fileName);                               // Export font as code file, returns true on success
 
+#if !defined(ONLY_CPU_MODE)
 // Text drawing functions
 RLAPI void DrawFPS(int posX, int posY);                                                     // Draw current FPS
 RLAPI void DrawText(const char *text, int posX, int posY, int fontSize, Color color);       // Draw text (using default font)
@@ -1476,6 +1488,8 @@ RLAPI void DrawTextEx(Font font, const char *text, Vector2 position, float fontS
 RLAPI void DrawTextPro(Font font, const char *text, Vector2 position, Vector2 origin, float rotation, float fontSize, float spacing, Color tint); // Draw text using Font and pro parameters (rotation)
 RLAPI void DrawTextCodepoint(Font font, int codepoint, Vector2 position, float fontSize, Color tint); // Draw one character (codepoint)
 RLAPI void DrawTextCodepoints(Font font, const int *codepoints, int codepointCount, Vector2 position, float fontSize, float spacing, Color tint); // Draw multiple character (codepoint)
+
+#endif
 
 // Text font info functions
 RLAPI void SetTextLineSpacing(int spacing);                                                 // Set vertical line spacing when drawing with line-breaks
@@ -1518,6 +1532,7 @@ RLAPI const char *TextToCamel(const char *text);                      // Get Cam
 RLAPI int TextToInteger(const char *text);                            // Get integer value from text (negative values not supported)
 RLAPI float TextToFloat(const char *text);                            // Get float value from text (negative values not supported)
 
+#if !defined(ONLY_CPU_MODE)
 //------------------------------------------------------------------------------------
 // Basic 3d Shapes Drawing Functions (Module: models)
 //------------------------------------------------------------------------------------
@@ -1617,6 +1632,8 @@ RLAPI RayCollision GetRayCollisionBox(Ray ray, BoundingBox box);                
 RLAPI RayCollision GetRayCollisionMesh(Ray ray, Mesh mesh, Matrix transform);                       // Get collision info between ray and mesh
 RLAPI RayCollision GetRayCollisionTriangle(Ray ray, Vector3 p1, Vector3 p2, Vector3 p3);            // Get collision info between ray and triangle
 RLAPI RayCollision GetRayCollisionQuad(Ray ray, Vector3 p1, Vector3 p2, Vector3 p3, Vector3 p4);    // Get collision info between ray and quad
+ 
+#endif
 
 //------------------------------------------------------------------------------------
 // Audio Loading and Playing Functions (Module: audio)
